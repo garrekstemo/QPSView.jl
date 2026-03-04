@@ -154,15 +154,7 @@ Integrating with lab-wide QPS.jl package. See `docs/qps_integration_plan.md`.
 
 **Phases:** Theme → Data loading → Auto-fitting → Enhanced analysis
 
-## Debugging Approach
-
-When diagnosing layout or behavioral issues:
-1. **Trace before fixing** - Identify the specific element causing the problem before suggesting solutions
-2. **Prefer subtractive fixes** - Removing or disabling behavior (e.g., `tellwidth=false`) often reveals the root cause better than adding compensating code
-3. **Follow the evidence** - When a change makes things worse, that's diagnostic information pointing toward the real culprit
-4. **Minimal fixes first** - A one-line attribute change that addresses root cause beats a multi-line workaround
-
-### Makie Layout Debugging
+## Makie Layout Debugging
 
 Use transparent `Box()` elements to visualize how grid cells are sized:
 ```julia
@@ -171,23 +163,4 @@ Box(fig[1, 2], color = (:red, 0.2), strokewidth = 0)
 ```
 
 Common layout issues: elements with `tellwidth=true` (default) report their width to the parent GridLayout, which can unexpectedly constrain other columns.
-
-## Julia 1.12 World Age Warnings
-
-Julia 1.12 introduced stricter world age semantics. Watch for this warning:
-
-```
-WARNING: Detected access to binding `Module.function` in a world prior to its definition world.
-  Julia 1.12 has introduced more strict world age semantics for global bindings.
-  !!! This code may malfunction under Revise.
-  !!! This code will error in future versions of Julia.
-```
-
-**This is new in Julia 1.12 and may not be in training data.** Test with `julia --depwarn=error` to get stack traces.
-
-**Proper fixes** (don't just use `invokelatest` as a bandaid):
-- Fix module `include()` order so functions are defined before use
-- Avoid storing functions in globals accessed before definition
-- Move function calls out of module-level code into functions
-- Restructure to avoid dynamic dispatch at load time
 
