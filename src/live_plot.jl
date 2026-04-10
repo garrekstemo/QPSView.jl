@@ -77,6 +77,35 @@ function update_plot_data!(x, y, data_container, ax, new_x, new_y, xlabel, ylabe
 end
 
 """
+    _wait_for_file_ready(filepath; max_wait=2.0, poll_interval=0.05) -> Bool
+
+Poll a file's size until it stops growing, indicating the writer has finished.
+
+The file watcher fires on file creation — before LabView has written any
+data. Reading a 0-byte `.lvm` at that instant makes `readlines` return
+`String[]`, and the first `lines[1]` access in `QPSTools.load_lvm` throws
+`BoundsError(String[], (1,))`. Waiting for a non-zero size that repeats
+across two polls is a reliable stability signal on Windows.
+
+Returns `true` once the size is stable and non-zero, `false` on timeout
+or if the file disappears.
+"""
+function _wait_for_file_ready(filepath::String; max_wait::Float64=2.0, poll_interval::Float64=0.05)
+    deadline = time() + max_wait
+    last_size = -1
+    while time() < deadline
+        isfile(filepath) || return false
+        current_size = filesize(filepath)
+        if current_size > 0 && current_size == last_size
+            return true
+        end
+        last_size = current_size
+        sleep(poll_interval)
+    end
+    return false
+end
+
+"""
     watch_and_process_files(datadir, file_ext, load_function, waittime, x, y, data_container, ax)
 
 Watches for new files in the directory and processes them when found.
@@ -105,6 +134,15 @@ function watch_and_process_files(datadir, file_ext, load_function, waittime, x, 
                 if !isfile(filepath)
                     continue
                 end
+
+                # Wait for the writer to finish before reading. Without this,
+                # the initial create event races with LabView's write and we
+                # read a 0-byte file. Don't mark as seen on timeout so the
+                # next watcher event gets another chance.
+                if !_wait_for_file_ready(filepath)
+                    continue
+                end
+
                 push!(seen_files, file)
 
                 println("New file: ", file)
