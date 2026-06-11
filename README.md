@@ -1,3 +1,9 @@
+> [!IMPORTANT]
+> **This package is archived and unmaintained** (June 2026). It can no longer be instantiated
+> (its `[sources]` entries point at paths that no longer exist) and has been superseded in the
+> QPS lab by [QPSConsole](https://github.com/garrekstemo/QPSConsole) (live scan operation via
+> QPSDrive's WebSocket server) and [QPSLab](https://github.com/garrekstemo/QPSLab) (analysis GUI).
+
 # QPSView.jl
 
 A real-time data visualization tool that automatically displays new data files added to a folder using GLMakie. The intended use case is experimental devices that save measurements to files, providing live plotting capabilities for immediate data inspection.
